@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 
 from django.urls import reverse_lazy
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 from .models import Profile, News, Comment, User
 from .forms import LoginUserForm, RegisterUserForm, EditUserProfileForm
@@ -56,17 +56,36 @@ def news_list(request: WSGIRequest) -> HttpResponse:
 
 def news_detail(request: WSGIRequest, news_id: int) -> HttpResponse:
     """
-    Обработчик запроса для страницы конкретной новости. Отображает выбранную новость и все комментарии к ней.
+    Обработчик запроса для страницы конкретной новости. Отображает выбранную новост, лайки, просмотры,
+    комментарии и форму для добавления комментария.
 
     :param request: Объект HttpRequest от Django.
     :param news_id: ID новости.
     :return: HttpResponse: Отображение шаблона страницы конкретной новости.
     """
-    news_item = News.objects.get(id=news_id)
-    comments = news_item.comments.all()
-    return render(
-        request, "news_detail.html", {"news": news_item, "comments": comments}
-    )
+    news = get_object_or_404(News, id=news_id)
+
+    # Обновляем количество просмотров
+    news.views += 1
+    news.save()
+
+    # Обработка формы добавления комментария
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            text = request.POST.get('text')
+            if text:
+                Comment.objects.create(news=news, author=request.user.profile, text=text)
+                return redirect('news_detail', news_id=news_id)
+        else:
+            return redirect('login')
+
+    comments = news.comments.all()
+
+    context = {
+        'news': news,
+        'comments': comments,
+    }
+    return render(request, 'news_detail.html', context)
 
 @login_required
 def profile_view(request: WSGIRequest) -> HttpResponse:

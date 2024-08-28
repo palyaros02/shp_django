@@ -1,0 +1,63 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ news.title }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- News Image -->
+    {% if news.image %}
+    <div class="mb-4">
+        <img src="{{ news.image.url }}" class="img-fluid" alt="{{ news.title }}">
+    </div>
+    {% endif %}
+
+    <!-- News Title -->
+    <h1 class="mb-3">{{ news.title }}</h1>
+
+    <!-- News Content -->
+    <div class="mb-4">
+        <p>{{ news.description }}</p>
+    </div>
+
+    <!-- Likes and Views -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="me-3"><strong>Лайки:</strong> {{ news.likes }}</span>
+            <span><strong>Просмотры:</strong> {{ news.views }}</span>
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    <h3 class="mb-3">Комментарии</h3>
+
+    <!-- List of Comments -->
+    <div class="mb-4">
+        {% if comments %}
+            {% for comment in comments %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="card-text">{{ comment.text }}</p>
+                        <p class="text-muted"> @{{ comment.author.user.username }}, {{ comment.created_at }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Комментариев пока нет. Будьте первым!</p>
+        {% endif %}
+    </div>
+
+    <!-- Add Comment Form -->
+    {% if user.is_authenticated %}
+    <h4 class="mb-3">Добавить комментарий</h4>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <textarea name="text" class="form-control" rows="3" placeholder="Напишите свой комментарий..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Добавить комментарий</button>
+    </form>
+    {% else %}
+    <p>Пожалуйста, <a href="{% url 'login' %}">войдите</a>, чтобы оставить комментарий.</p>
+    {% endif %}
+</div>
+{% endblock %}
