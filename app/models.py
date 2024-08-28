@@ -10,3 +10,16 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.full_name
+
+class News(models.Model):
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='news_images/', null=True, blank=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    likes = models.PositiveIntegerField(default=0)
+    views = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return self.title
