@@ -12,11 +12,15 @@ class Profile(models.Model):
     email: Адрес электронной почты пользователя. (уникальное поле)
     bio: Биография пользователя. (необязательное поле)
     """
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    full_name = models.CharField(max_length=255)
-    birth_date = models.DateField(null=True, blank=True)
-    email = models.EmailField(unique=True)
-    bio = models.TextField(blank=True, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', verbose_name='Пользователь')
+    full_name = models.CharField(max_length=255, verbose_name='Полное имя')
+    birth_date = models.DateField(null=True, blank=True, verbose_name='Дата рождения')
+    email = models.EmailField(unique=True, verbose_name='Email')
+    bio = models.TextField(blank=True, null=True, verbose_name='О себе')
+
+    class Meta:
+        verbose_name = "Профиль"
+        verbose_name_plural = "Профили"
 
     def __str__(self):
         return self.full_name
@@ -37,13 +41,19 @@ class News(models.Model):
     comments: Связь с моделью Comment через отношение один ко многим по обратному отношению. Позволяет получить все комментарии к новости.
 
     """
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='news_images/', null=True, blank=True)
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    views = models.PositiveIntegerField(default=0)
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='news', verbose_name='Автор')
+    image = models.ImageField(upload_to='news_images/', null=True, blank=True, verbose_name='Изображение')
+    title = models.CharField(max_length=255, verbose_name='Заголовок')
+    description = models.TextField(verbose_name='Текст статьи')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    views = models.PositiveIntegerField(default=0, verbose_name='Количество просмотров')
+
+    class Meta:
+        verbose_name = "Новость"
+        verbose_name_plural = "Новости"
+        ordering = ('-created_at', '-updated_at', 'title', 'author', 'views')
+
 
     def __str__(self):
         return self.title
@@ -60,10 +70,14 @@ class Comment(models.Model):
     text: Текст комментария. (неограниченное поле)
     created_at: Дата и время создания комментария. (автоматически заполняемое поле)
     """
-    news = models.ForeignKey(News, related_name='comments', on_delete=models.CASCADE)
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    news = models.ForeignKey(News, related_name='comments', on_delete=models.CASCADE, verbose_name='Новость')
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name='Автор')
+    text = models.TextField(verbose_name='Текст комментария')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+
+    class Meta:
+        verbose_name = "Комментарий"
+        verbose_name_plural = "Комментарии"
 
     def __str__(self):
         return f'Комментарий пользователя {self.author.user.username} к статье "{self.news.title}"'
@@ -76,11 +90,13 @@ class Like(models.Model):
     user: Связь с моделью User.
     news: Связь с моделью News.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    news = models.ForeignKey(News, related_name='likes', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes', verbose_name='Пользователь')
+    news = models.ForeignKey(News, related_name='likes', on_delete=models.CASCADE, verbose_name='Новость')
 
     class Meta:
         unique_together = ('user', 'news')
+        verbose_name = "Лайк"
+        verbose_name_plural = "Лайки"
 
     def __str__(self):
         return f'{self.user.username} likes {self.news.title}'
