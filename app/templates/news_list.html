@@ -1,0 +1,32 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Все новости{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <h1 class="text-center mb-4">Все новости</h1>
+  <div class="row justify-content-center">
+    {% if not news_list %}
+    <div class="col-md-6">
+      <div class="alert alert-info text-center" role="alert">
+        Новостей пока нет
+      </div>
+    </div>
+    {% endif %}
+    {% for news in news_list %}
+    <div class="col-md-4 mb-4">
+      <div class="card h-100">
+        {% if news.image %}
+        <img src="{{ news.image.url }}" class="card-img-top" alt="{{ news.title }}">
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ news.title }}</h5>
+          <p class="card-text">{{ news.description|truncatewords:30 }}</p>
+          <a href="{% url 'news_detail' news.id %}" class="btn btn-primary">Читать далее</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
