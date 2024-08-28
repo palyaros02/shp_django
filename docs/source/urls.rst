@@ -1,13 +1,9 @@
-from django.conf import settings
-from django.conf.urls.static import static
-from django.contrib import admin
-from django.urls import path, re_path
-from django.views.static import serve
-from django.views.generic import RedirectView
+URL-шаблоны
+------------
 
-from app import views
+.. code-block:: python
 
-urlpatterns = [
+  urlpatterns = [
     # Маршрут к административной панели Django.
     path('admin/', admin.site.urls),
 
@@ -35,4 +31,4 @@ urlpatterns = [
     # Маршрут к профилю
     path('profile/', views.profile_view, name='profile'),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+  ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

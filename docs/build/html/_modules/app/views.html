@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html lang="ru" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>app.views &#8212; документация News Website 1.0</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=c058f7c8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=9ca2116e"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/translations.js?v=9bfe3ffa"></script>
+    <link rel="index" title="Алфавитный указатель" href="../../genindex.html" />
+    <link rel="search" title="Поиск" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Исходный код app.views</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">django.contrib.auth</span> <span class="kn">import</span> <span class="n">login</span><span class="p">,</span> <span class="n">logout</span>
+<span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="kn">import</span> <span class="n">login_required</span>
+<span class="kn">from</span> <span class="nn">django.contrib.auth.views</span> <span class="kn">import</span> <span class="n">LoginView</span>
+<span class="kn">from</span> <span class="nn">django.core.handlers.wsgi</span> <span class="kn">import</span> <span class="n">WSGIRequest</span>
+<span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">HttpResponse</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">get_object_or_404</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">render</span>
+<span class="kn">from</span> <span class="nn">django.urls</span> <span class="kn">import</span> <span class="n">reverse_lazy</span>
+<span class="kn">from</span> <span class="nn">django.views.generic</span> <span class="kn">import</span> <span class="n">CreateView</span>
+
+<span class="kn">from</span> <span class="nn">.forms</span> <span class="kn">import</span> <span class="n">EditUserProfileForm</span><span class="p">,</span> <span class="n">LoginUserForm</span><span class="p">,</span> <span class="n">RegisterUserForm</span>
+<span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">Comment</span><span class="p">,</span> <span class="n">Like</span><span class="p">,</span> <span class="n">News</span><span class="p">,</span> <span class="n">Profile</span><span class="p">,</span> <span class="n">User</span>
+
+
+<div class="viewcode-block" id="index">
+<a class="viewcode-back" href="../../views.html#app.views.index">[документация]</a>
+<span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">WSGIRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HttpResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Обработчик запроса для главной страницы. Отображает общую информацию о сайте и последние новости. Информация о количестве пользователей, новостей и комментариев берется из базы данных.</span>
+
+<span class="sd">    :param request: Объект HttpRequest от Django.</span>
+<span class="sd">    :return: HttpResponse: Отображение шаблона главной страницы.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_count</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span> <span class="c1"># админа не учитываем</span>
+    <span class="n">news_count</span> <span class="o">=</span> <span class="n">News</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+    <span class="n">comment_count</span> <span class="o">=</span> <span class="n">Comment</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+    <span class="n">latest_news</span> <span class="o">=</span> <span class="n">News</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;-created_at&quot;</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;user_count&quot;</span><span class="p">:</span> <span class="n">user_count</span><span class="p">,</span>
+        <span class="s2">&quot;news_count&quot;</span><span class="p">:</span> <span class="n">news_count</span><span class="p">,</span>
+        <span class="s2">&quot;comment_count&quot;</span><span class="p">:</span> <span class="n">comment_count</span><span class="p">,</span>
+        <span class="s2">&quot;latest_news&quot;</span><span class="p">:</span> <span class="n">latest_news</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;index.html&quot;</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="about">
+<a class="viewcode-back" href="../../views.html#app.views.about">[документация]</a>
+<span class="k">def</span> <span class="nf">about</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">WSGIRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HttpResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Обработчик запроса для страницы &quot;О нас&quot;. Отображает информацию о сайте и его создателях.</span>
+
+<span class="sd">    :param request: Объект HttpRequest от Django.</span>
+<span class="sd">    :return: HttpResponse: Отображение шаблона страницы &quot;О нас&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;about.html&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="news_list">
+<a class="viewcode-back" href="../../views.html#app.views.news_list">[документация]</a>
+<span class="k">def</span> <span class="nf">news_list</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">WSGIRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HttpResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Обработчик запроса для страницы &quot;Все новости&quot;. Отображает список всех новостей.</span>
+
+<span class="sd">    :param request: Объект HttpRequest от Django.</span>
+<span class="sd">    :return: HttpResponse: Отображение шаблона страницы &quot;Все новости&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">search</span> <span class="o">:=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">):</span>
+        <span class="n">news</span> <span class="o">=</span> <span class="n">News</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">title__iregex</span><span class="o">=</span><span class="n">search</span><span class="p">)</span> <span class="o">|</span> <span class="n">News</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">description__iregex</span><span class="o">=</span><span class="n">search</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">news</span> <span class="o">=</span> <span class="n">News</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;-created_at&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;news_list.html&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;news_list&quot;</span><span class="p">:</span> <span class="n">news</span><span class="p">})</span></div>
+
+
+
+<div class="viewcode-block" id="news_detail">
+<a class="viewcode-back" href="../../views.html#app.views.news_detail">[документация]</a>
+<span class="k">def</span> <span class="nf">news_detail</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">WSGIRequest</span><span class="p">,</span> <span class="n">news_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HttpResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Обработчик запроса для страницы конкретной новости. Отображает выбранную новост, лайки, просмотры,</span>
+<span class="sd">    комментарии и форму для добавления комментария.</span>
+
+<span class="sd">    :param request: Объект HttpRequest от Django.</span>
+<span class="sd">    :param news_id: ID новости.</span>
+<span class="sd">    :return: HttpResponse: Отображение шаблона страницы конкретной новости.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">news</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">News</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">news_id</span><span class="p">)</span>
+
+    <span class="c1"># Обновляем количество просмотров</span>
+    <span class="n">news</span><span class="o">.</span><span class="n">views</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">news</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+    <span class="c1"># Обработка добавления/удаления лайка</span>
+    <span class="k">if</span> <span class="s1">&#39;like&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_authenticated</span><span class="p">:</span>
+            <span class="n">existing_like</span> <span class="o">=</span> <span class="n">Like</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">news</span><span class="o">=</span><span class="n">news</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">existing_like</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">existing_like</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>  <span class="c1"># Удаляем лайк, если он уже был</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Like</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">news</span><span class="o">=</span><span class="n">news</span><span class="p">)</span>  <span class="c1"># Добавляем лайк</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;news_detail&#39;</span><span class="p">,</span> <span class="n">news_id</span><span class="o">=</span><span class="n">news_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;login&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Обработка формы добавления комментария</span>
+    <span class="k">if</span> <span class="s1">&#39;text&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_authenticated</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+                <span class="n">Comment</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">news</span><span class="o">=</span><span class="n">news</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">profile</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;news_detail&#39;</span><span class="p">,</span> <span class="n">news_id</span><span class="o">=</span><span class="n">news_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;login&#39;</span><span class="p">)</span>
+
+    <span class="n">comments</span> <span class="o">=</span> <span class="n">news</span><span class="o">.</span><span class="n">comments</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">liked_by_user</span> <span class="o">=</span> <span class="n">news</span><span class="o">.</span><span class="n">likes</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_authenticated</span> <span class="k">else</span> <span class="kc">False</span>
+
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;news&#39;</span><span class="p">:</span> <span class="n">news</span><span class="p">,</span>
+        <span class="s1">&#39;comments&#39;</span><span class="p">:</span> <span class="n">comments</span><span class="p">,</span>
+        <span class="s1">&#39;liked_by_user&#39;</span><span class="p">:</span> <span class="n">liked_by_user</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;news_detail.html&#39;</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="profile_view">
+<a class="viewcode-back" href="../../views.html#app.views.profile_view">[документация]</a>
+<span class="nd">@login_required</span>
+<span class="k">def</span> <span class="nf">profile_view</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">WSGIRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HttpResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Обработчик запроса для страницы профиля пользователя. Отображает информацию о пользователе.</span>
+
+<span class="sd">    :param request: Объект HttpRequest от Django.</span>
+<span class="sd">    :return: HttpResponse: Отображение шаблона страницы профиля пользователя или запрет доступа.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span>
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">Profile</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">EditUserProfileForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">instance</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">)</span>  <span class="c1"># Перенаправление на главную после сохранения</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">EditUserProfileForm</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;profile.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;form&#39;</span><span class="p">:</span> <span class="n">form</span><span class="p">})</span></div>
+
+
+
+<div class="viewcode-block" id="LoginUser">
+<a class="viewcode-back" href="../../views.html#app.views.LoginUser">[документация]</a>
+<span class="k">class</span> <span class="nc">LoginUser</span><span class="p">(</span><span class="n">LoginView</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Класс представления для входа пользователя в систему.</span>
+<span class="sd">    Позволяет пользователям войти в систему, используя свои учетные данные.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">form_class</span> <span class="o">=</span> <span class="n">LoginUserForm</span>
+    <span class="n">template_name</span> <span class="o">=</span> <span class="s1">&#39;login.html&#39;</span>
+
+<div class="viewcode-block" id="LoginUser.get_success_url">
+<a class="viewcode-back" href="../../views.html#app.views.LoginUser.get_success_url">[документация]</a>
+    <span class="k">def</span> <span class="nf">get_success_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">reverse_lazy</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">)</span></div>
+</div>
+
+
+
+
+<div class="viewcode-block" id="logout_user">
+<a class="viewcode-back" href="../../views.html#app.views.logout_user">[документация]</a>
+<span class="k">def</span> <span class="nf">logout_user</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">WSGIRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HttpResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Обработчик запроса для выхода пользователя из системы.</span>
+<span class="sd">    Позволяет пользователю выйти из системы и перенаправляет его на страницу входа.</span>
+
+<span class="sd">    :param request: Объект HttpRequest от Django.</span>
+<span class="sd">    :return: HttpResponse: Перенаправление на страницу входа.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logout</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">META</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HTTP_REFERER&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;/profile&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">META</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HTTP_REFERER&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">META</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HTTP_REFERER&#39;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="RegisterUser">
+<a class="viewcode-back" href="../../views.html#app.views.RegisterUser">[документация]</a>
+<span class="k">class</span> <span class="nc">RegisterUser</span><span class="p">(</span><span class="n">CreateView</span><span class="p">):</span>
+    <span class="k">pass</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Класс представления для регистрации нового пользователя.</span>
+<span class="sd">    Позволяет новым пользователям зарегистрироваться в системе.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">form_class</span> <span class="o">=</span> <span class="n">RegisterUserForm</span>
+    <span class="n">template_name</span> <span class="o">=</span> <span class="s1">&#39;register.html&#39;</span>
+    <span class="n">success_url</span> <span class="o">=</span> <span class="n">reverse_lazy</span><span class="p">(</span><span class="s1">&#39;login&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RegisterUser.form_valid">
+<a class="viewcode-back" href="../../views.html#app.views.RegisterUser.form_valid">[документация]</a>
+    <span class="k">def</span> <span class="nf">form_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">form</span><span class="p">):</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">Profile</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">full_name</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">cleaned_data</span><span class="p">[</span><span class="s1">&#39;full_name&#39;</span><span class="p">],</span> <span class="n">email</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">cleaned_data</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">],</span> <span class="n">bio</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">cleaned_data</span><span class="p">[</span><span class="s1">&#39;bio&#39;</span><span class="p">],</span> <span class="n">birth_date</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">cleaned_data</span><span class="p">[</span><span class="s1">&#39;birth_date&#39;</span><span class="p">],</span> <span class="p">)</span>
+        <span class="n">profile</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">login</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">News Website</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Навигация</h3>
+<p class="caption" role="heading"><span class="caption-text">Содержание:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../models.html">Модели</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../views.html">Views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../forms.html">Формы</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Код модуля</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Yaroslav Palamarchuk.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.0.2</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
