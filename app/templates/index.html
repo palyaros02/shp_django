@@ -29,6 +29,9 @@
 <div class="container">
   <h2 class="text-center my-5">Последние новости</h2>
   <div class="row justify-content-center">
+    {% if not latest_news %}
+      <h4 class="text-center my-5">Новостей пока нет :(</h4>
+    {% endif %}
     {% for news in latest_news %}
     <div class="col-md-4 mb-4">
       <div class="card h-100">

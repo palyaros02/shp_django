@@ -1,9 +1,11 @@
 
 from django import forms
-from django.contrib.auth.models import User
-from .models import Profile
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.conf import settings
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.models import User
+
+from .models import Profile
+
 
 class RegisterUserForm(UserCreationForm):
     """
@@ -54,23 +56,12 @@ class LoginUserForm(AuthenticationForm):
     username = forms.CharField(label='Имя пользователя', widget=forms.TextInput(attrs={'class': 'form-input form-control'}))
     password = forms.CharField(label='Пароль', widget=forms.PasswordInput(attrs={'class': 'form-input form-control'}))
 
-class ProfileForm(forms.ModelForm):
+class EditUserProfileForm(forms.ModelForm):
     """
     Форма для редактирования профиля пользователя.
 
-    Наследует от ModelForm и добавляет поля для редактирования полного имени, даты рождения, адреса электронной почты, биографии и аватара пользователя. Поля настроены с пользовательскими классами CSS для улучшения внешнего вида.
+    Наследует от ModelForm и добавляет поля для редактирования полного имени, даты рождения, адреса электронной почты, биографии пользователя. Поля настроены с пользовательскими классами CSS для улучшения внешнего вида.
     """
-    class Meta:
-        model = Profile
-        fields = ['full_name', 'birth_date', 'email', 'bio']
-        widgets = {
-            'full_name': forms.TextInput(attrs={'class': 'form-control', 'label': 'Полное имя'}),
-            'birth_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'placeholder': 'Дата рождения'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}),
-            'bio': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'О себе'}),
-        }
-
-class EditUserProfileForm(forms.ModelForm):
     username = forms.CharField(label='Имя пользователя', widget=forms.TextInput(attrs={'class': 'form-input form-control'}))
     email = forms.EmailField(label='Адрес электронной почты', widget=forms.EmailInput(attrs={'class': 'form-input form-control'}))
     password1 = forms.CharField(label='Новый пароль', widget=forms.PasswordInput(attrs={'class': 'form-input form-control'}), required=False)

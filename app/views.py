@@ -1,3 +1,4 @@
+from math import e
 from django.core.handlers.wsgi import WSGIRequest
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView
@@ -144,7 +145,10 @@ def logout_user(request: WSGIRequest):
     :return: HttpResponse: Перенаправление на страницу входа.
     """
     logout(request)
-    return redirect(request.META.get('HTTP_REFERER'))
+
+    if request.META.get('HTTP_REFERER') and '/profile' not in request.META.get('HTTP_REFERER'):
+        return redirect(request.META.get('HTTP_REFERER'))
+    return redirect('index')
 
 
 class RegisterUser(CreateView):
