@@ -1,0 +1,54 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<!-- Приветственое сообщение -->
+<div class="bg-dark text-white text-center py-5">
+    <h1>Добро пожаловать</h1>
+    <p>Это новостной сайт, где вы найдете самые свежие новости, статьи и фотоматериалы.</p>
+</div>
+
+<!-- Счётчики -->
+<div class="container text-center my-5">
+    <div class="row">
+        <div class="col-md-4">
+            <h2>{{ user_count }}</h2>
+            <p>Пользователей</p>
+        </div>
+        <div class="col-md-4">
+            <h2>{{ news_count }}</h2>
+            <p>Статей</p>
+        </div>
+        <div class="col-md-4">
+            <h2>{{ comment_count }}</h2>
+            <p>Комментариев</p>
+        </div>
+    </div>
+</div>
+
+<!-- Последние новости -->
+<div class="container">
+    <h2 class="text-center my-5">Последние новости</h2>
+    <div class="row justify-content-center">
+        {% for news in latest_news %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                {% if news.image %}
+                <img src="{{ news.image.url }}" class="card-img-top" alt="{{ news.title }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ news.title }}</h5>
+                    <p class="card-text">{{ news.description|truncatewords:20 }}</p>
+                    <a href="{% url 'news_detail' news.id %}" class="btn btn-primary">Читать далее</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Кнопка "смотреть еще" -->
+    <div class="text-center">
+        <a href="{% url 'news_list' %}" class="btn btn-outline-primary">Смотреть еще</a>
+    </div>
+
+</div>
+{% endblock %}
