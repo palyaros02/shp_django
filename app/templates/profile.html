@@ -1,0 +1,37 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Профиль пользователя{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <h2 class="text-center">Профиль пользователя</h2>
+      <div class="card">
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <img src="/media/avatars/default.jpg" class="rounded-circle" alt="Avatar" width="150">
+          </div>
+
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for f in form %}
+              {% if f.label != 'Аутентификация по паролю' %}
+                <p><label class="form-label" for="{{ f.id_for_label }}">{{f.label}}: </label>{{ f }}</p>
+                <div class="form-error">{{ f.errors }}</div>
+              {% endif %}
+            {% endfor %}
+
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+              <a href="{% url 'index' %}" style="color: #ffffff; text-decoration: none; font-weight: inherit;"><button type="button" class="btn btn-secondary">Отменить редактирование</a>
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -10,7 +10,7 @@ from django.urls import reverse_lazy
 from django.shortcuts import render, redirect
 
 from .models import Profile, News, Comment, User
-from .forms import LoginUserForm, RegisterUserForm
+from .forms import LoginUserForm, RegisterUserForm, EditUserProfileForm
 
 def index(request: WSGIRequest) -> HttpResponse:
     """
@@ -68,7 +68,7 @@ def news_detail(request: WSGIRequest, news_id: int) -> HttpResponse:
         request, "news_detail.html", {"news": news_item, "comments": comments}
     )
 
-
+@login_required
 def profile_view(request: WSGIRequest) -> HttpResponse:
     """
     Обработчик запроса для страницы профиля пользователя. Отображает информацию о пользователе.
@@ -76,10 +76,17 @@ def profile_view(request: WSGIRequest) -> HttpResponse:
     :param request: Объект HttpRequest от Django.
     :return: HttpResponse: Отображение шаблона страницы профиля пользователя или запрет доступа.
     """
-    if request.user.is_authenticated:
-        return render(request, "profile.html")
+    user = request.user
+    profile = Profile.objects.get(user=user)
+
+    if request.method == 'POST':
+        form = EditUserProfileForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('index')  # Перенаправление на главную после сохранения
     else:
-        return HttpResponseForbidden()
+        form = EditUserProfileForm(instance=user)
+    return render(request, 'profile.html', {'form': form})
 
 
 class LoginUser(LoginView):
@@ -119,6 +126,7 @@ class RegisterUser(CreateView):
 
     def form_valid(self, form):
         user = form.save()
-
+        profile = Profile(user=user, full_name=form.cleaned_data['full_name'], email=form.cleaned_data['email'], bio=form.cleaned_data['bio'], birth_date=form.cleaned_data['birth_date'], )
+        profile.save()
         login(self.request, user)
         return redirect('index')

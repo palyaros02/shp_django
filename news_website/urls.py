@@ -32,4 +32,7 @@ urlpatterns = [
 
     # Маршрут к профилю
     path('profile/', views.profile_view, name='profile'),
+
+    # Маршрут к изменению пароля
+    # path('password_change/', views.PasswordChangeView.as_view(template_name='password_change_form.html'), name='password_change'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
