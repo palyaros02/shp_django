@@ -1,17 +1,15 @@
-from math import e
-from django.core.handlers.wsgi import WSGIRequest
 from django.contrib.auth import login, logout
-from django.contrib.auth.views import LoginView
-from django.views.generic import CreateView
 from django.contrib.auth.decorators import login_required
-
-from django.http import HttpResponse, HttpResponseForbidden
-
+from django.contrib.auth.views import LoginView
+from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
-from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import CreateView
 
-from .models import Profile, News, Comment, User, Like
-from .forms import LoginUserForm, RegisterUserForm, EditUserProfileForm
+from .forms import EditUserProfileForm, LoginUserForm, RegisterUserForm
+from .models import Comment, Like, News, Profile, User
+
 
 def index(request: WSGIRequest) -> HttpResponse:
     """
@@ -51,7 +49,11 @@ def news_list(request: WSGIRequest) -> HttpResponse:
     :param request: Объект HttpRequest от Django.
     :return: HttpResponse: Отображение шаблона страницы "Все новости".
     """
-    news = News.objects.order_by("-created_at")
+
+    if search := request.GET.get("search"):
+        news = News.objects.filter(title__iregex=search) | News.objects.filter(description__iregex=search)
+    else:
+        news = News.objects.order_by("-created_at")
     return render(request, "news_list.html", {"news_list": news})
 
 
@@ -136,7 +138,7 @@ class LoginUser(LoginView):
 
 
 
-def logout_user(request: WSGIRequest):
+def logout_user(request: WSGIRequest) -> HttpResponse:
     """
     Обработчик запроса для выхода пользователя из системы.
     Позволяет пользователю выйти из системы и перенаправляет его на страницу входа.
