@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path
+from django.conf.urls.static import static
+from django.conf import settings
 
 from app import views
 
@@ -30,4 +32,4 @@ urlpatterns = [
 
     # Маршрут к профилю
     path('profile/', views.profile_view, name='profile'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
