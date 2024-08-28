@@ -1,5 +1,6 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
+
 
 class Profile(models.Model):
     """
@@ -42,11 +43,13 @@ class News(models.Model):
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    likes = models.PositiveIntegerField(default=0)
     views = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.title
+
+    def like_count(self):
+        return self.likes.count()
 
 class Comment(models.Model):
     """
@@ -64,3 +67,20 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Комментарий пользователя {self.author.user.username} к статье "{self.news.title}"'
+
+
+class Like(models.Model):
+    """
+    Модель лайка к новости. Связана с моделью пользователя User и моделью новости News через отношение многие ко многим. Служит для хранения информации о лайках к новостям, такой как:
+
+    user: Связь с моделью User.
+    news: Связь с моделью News.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    news = models.ForeignKey(News, related_name='likes', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'news')
+
+    def __str__(self):
+        return f'{self.user.username} likes {self.news.title}'

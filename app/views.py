@@ -9,7 +9,7 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.urls import reverse_lazy
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import Profile, News, Comment, User
+from .models import Profile, News, Comment, User, Like
 from .forms import LoginUserForm, RegisterUserForm, EditUserProfileForm
 
 def index(request: WSGIRequest) -> HttpResponse:
@@ -69,8 +69,20 @@ def news_detail(request: WSGIRequest, news_id: int) -> HttpResponse:
     news.views += 1
     news.save()
 
+    # Обработка добавления/удаления лайка
+    if 'like' in request.POST:
+        if request.user.is_authenticated:
+            existing_like = Like.objects.filter(user=request.user, news=news)
+            if existing_like.exists():
+                existing_like.delete()  # Удаляем лайк, если он уже был
+            else:
+                Like.objects.create(user=request.user, news=news)  # Добавляем лайк
+            return redirect('news_detail', news_id=news_id)
+        else:
+            return redirect('login')
+
     # Обработка формы добавления комментария
-    if request.method == 'POST':
+    if 'text' in request.POST:
         if request.user.is_authenticated:
             text = request.POST.get('text')
             if text:
@@ -80,10 +92,12 @@ def news_detail(request: WSGIRequest, news_id: int) -> HttpResponse:
             return redirect('login')
 
     comments = news.comments.all()
+    liked_by_user = news.likes.filter(user=request.user).exists() if request.user.is_authenticated else False
 
     context = {
         'news': news,
         'comments': comments,
+        'liked_by_user': liked_by_user,
     }
     return render(request, 'news_detail.html', context)
 
@@ -130,7 +144,7 @@ def logout_user(request: WSGIRequest):
     :return: HttpResponse: Перенаправление на страницу входа.
     """
     logout(request)
-    return redirect("login")
+    return redirect(request.META.get('HTTP_REFERER'))
 
 
 class RegisterUser(CreateView):

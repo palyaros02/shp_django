@@ -3,61 +3,82 @@
 {% block title %}{{ news.title }}{% endblock %}
 
 {% block content %}
+<!-- Серая полоса с изображением новости -->
+<div class="bg-dark text-white text-center">
+  {% if news.image %}
+  <div class="container">
+    <img src="{{ news.image.url }}" class="img-fluid" alt="{{ news.title }}">
+  </div>
+  {% endif %}
+</div>
+
 <div class="container my-5">
-    <!-- News Image -->
-    {% if news.image %}
-    <div class="mb-4">
-        <img src="{{ news.image.url }}" class="img-fluid" alt="{{ news.title }}">
-    </div>
-    {% endif %}
+  <!-- Заголовок новости -->
+  <h1 class="mb-3">{{ news.title }}</h1>
 
-    <!-- News Title -->
-    <h1 class="mb-3">{{ news.title }}</h1>
+  <!-- Текст новости -->
+  <div class="mb-4">
+    <p>{{ news.description | linebreaks }}</p>
+  </div>
 
-    <!-- News Content -->
-    <div class="mb-4">
-        <p>{{ news.description }}</p>
-    </div>
-
-    <!-- Likes and Views -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <span class="me-3"><strong>Лайки:</strong> {{ news.likes }}</span>
-            <span><strong>Просмотры:</strong> {{ news.views }}</span>
-        </div>
-    </div>
-
-    <!-- Comments Section -->
-    <h3 class="mb-3">Комментарии</h3>
-
-    <!-- List of Comments -->
-    <div class="mb-4">
-        {% if comments %}
-            {% for comment in comments %}
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <p class="card-text">{{ comment.text }}</p>
-                        <p class="text-muted"> @{{ comment.author.user.username }}, {{ comment.created_at }}</p>
-                    </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>Комментариев пока нет. Будьте первым!</p>
-        {% endif %}
-    </div>
-
-    <!-- Add Comment Form -->
-    {% if user.is_authenticated %}
-    <h4 class="mb-3">Добавить комментарий</h4>
-    <form method="post">
+  <!-- Лайки и просмотры -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Секция лайков -->
+    <div class="d-flex align-items-center">
+      <span class="me-2"><strong>Лайки:</strong> {{ news.like_count }}</span>
+      {% if user.is_authenticated %}
+      <form method="post" class="d-inline-block">
         {% csrf_token %}
-        <div class="mb-3">
-            <textarea name="text" class="form-control" rows="3" placeholder="Напишите свой комментарий..."></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Добавить комментарий</button>
-    </form>
+        {% if liked_by_user %}
+        <button type="submit" name="like" class="btn btn-link p-0"
+          style="font-size: 24px;text-decoration: none; font-weight: inherit;">👎</button>
+        {% else %}
+        <button type="submit" name="like" class="btn btn-link p-0"
+          style="font-size: 24px;text-decoration: none; font-weight: inherit;">👍</button>
+        {% endif %}
+      </form>
+      {% else %}
+      <a href="{% url 'login' %}" style="text-decoration: none; font-weight: inherit;"><small>(войдите, чтобы
+          поставить лайк)</small></a>
+      {% endif %}
+    </div>
+    <!-- Секция просмотров -->
+    <div>
+      <span><strong>Просмотры:</strong> {{ news.views }}</span>
+    </div>
+  </div>
+
+  <!-- Секция комментариев -->
+  <h3 class="mb-3">Комментарии</h3>
+
+  <!-- Список комментариев -->
+  <div class="mb-4">
+    {% if comments %}
+    {% for comment in comments %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <p class="card-text">{{ comment.text }}</p>
+        <p class="text-muted">- {{ comment.author.full_name }}, {{ comment.created_at }}</p>
+      </div>
+    </div>
+    {% endfor %}
     {% else %}
-    <p>Пожалуйста, <a href="{% url 'login' %}">войдите</a>, чтобы оставить комментарий.</p>
+    <p>Комментариев пока нет. Будьте первым!</p>
     {% endif %}
+  </div>
+
+  <!-- Форма добавления комментария -->
+  {% if user.is_authenticated %}
+  <h4 class="mb-3">Добавить комментарий</h4>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <textarea name="text" class="form-control" rows="3" placeholder="Напишите свой комментарий..."></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Добавить комментарий</button>
+  </form>
+  {% else %}
+  <p>Пожалуйста, <a href="{% url 'login' %}">войдите</a>, чтобы оставить комментарий.</p>
+  {% endif %}
 </div>
 {% endblock %}
