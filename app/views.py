@@ -9,7 +9,8 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.urls import reverse_lazy
 from django.shortcuts import render, redirect
 
-from .models import Profile, News, Comment
+from .models import Profile, News, Comment, User
+from .forms import LoginUserForm, RegisterUserForm
 
 def index(request: WSGIRequest) -> HttpResponse:
     """
@@ -18,10 +19,10 @@ def index(request: WSGIRequest) -> HttpResponse:
     :param request: Объект HttpRequest от Django.
     :return: HttpResponse: Отображение шаблона главной страницы.
     """
-    user_count = Profile.objects.count()
+    user_count = User.objects.count() - 1 # админа не учитываем
     news_count = News.objects.count()
     comment_count = Comment.objects.count()
-    latest_news = News.objects.order_by("-created_at")[:5]
+    latest_news = News.objects.order_by("-created_at")[:3]
 
     context = {
         "user_count": user_count,
@@ -49,8 +50,8 @@ def news_list(request: WSGIRequest) -> HttpResponse:
     :param request: Объект HttpRequest от Django.
     :return: HttpResponse: Отображение шаблона страницы "Все новости".
     """
-    news = News.objects.all()
-    return render(request, "news_list.html", {"news": news})
+    news = News.objects.order_by("-created_at")
+    return render(request, "news_list.html", {"news_list": news})
 
 
 def news_detail(request: WSGIRequest, news_id: int) -> HttpResponse:
@@ -86,7 +87,12 @@ class LoginUser(LoginView):
     Класс представления для входа пользователя в систему.
     Позволяет пользователям войти в систему, используя свои учетные данные.
     """
-    pass
+    form_class = LoginUserForm
+    template_name = 'login.html'
+
+    def get_success_url(self):
+        return reverse_lazy('index')
+
 
 
 def logout_user(request: WSGIRequest):
@@ -107,3 +113,12 @@ class RegisterUser(CreateView):
     Класс представления для регистрации нового пользователя.
     Позволяет новым пользователям зарегистрироваться в системе.
     """
+    form_class = RegisterUserForm
+    template_name = 'register.html'
+    success_url = reverse_lazy('login')
+
+    def form_valid(self, form):
+        user = form.save()
+
+        login(self.request, user)
+        return redirect('index')
