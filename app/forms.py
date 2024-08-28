@@ -14,9 +14,12 @@ class RegisterUserForm(UserCreationForm):
     Наследует от UserCreationForm и добавляет дополнительные поля для логина, адреса электронной почты, пароля и подтверждения пароля. Поля настроены с пользовательскими классами CSS для улучшения внешнего вида.
 
     :param username: Поле для ввода логина пользователя.
+    :param full_name: Поле для ввода полного имени пользователя.
     :param email: Поле для ввода адреса электронной почты.
     :param password1: Поле для ввода пароля.
     :param password2: Поле для подтверждения пароля.
+    :param birth_date: Поле для ввода даты рождения пользователя.
+    :param bio: Поле для ввода биографии пользователя.
     """
     username = forms.CharField(label='Имя пользователя', widget=forms.TextInput(attrs={'class': 'form-input form-control'}))
     full_name = forms.CharField(label='ФИО', widget=forms.TextInput(attrs={'class': 'form-input form-control'}))
@@ -61,6 +64,14 @@ class EditUserProfileForm(forms.ModelForm):
     Форма для редактирования профиля пользователя.
 
     Наследует от ModelForm и добавляет поля для редактирования полного имени, даты рождения, адреса электронной почты, биографии пользователя. Поля настроены с пользовательскими классами CSS для улучшения внешнего вида.
+
+    :param username: Поле для ввода логина пользователя.
+    :param email: Поле для ввода адреса электронной почты.
+    :param password1: Поле для ввода нового пароля пользователя.
+    :param password2: Поле для подтверждения нового пароля пользователя.
+    :param full_name: Поле для ввода полного имени пользователя.
+    :param birth_date: Поле для ввода даты рождения пользователя.
+    :param bio: Поле для ввода биографии пользователя.
     """
     username = forms.CharField(label='Имя пользователя', widget=forms.TextInput(attrs={'class': 'form-input form-control'}))
     email = forms.EmailField(label='Адрес электронной почты', widget=forms.EmailInput(attrs={'class': 'form-input form-control'}))
@@ -79,7 +90,7 @@ class EditUserProfileForm(forms.ModelForm):
         profile = Profile.objects.get(user=user)
         super().__init__(*args, **kwargs)
         self.fields['full_name'].initial = profile.full_name
-        self.fields['birth_date'].initial = profile.birth_date.strftime('%Y-%m-%d')
+        self.fields['birth_date'].initial = profile.birth_date.strftime('%Y-%m-%d') if profile.birth_date else None
         self.fields['bio'].initial = profile.bio
 
     def clean_password2(self):
